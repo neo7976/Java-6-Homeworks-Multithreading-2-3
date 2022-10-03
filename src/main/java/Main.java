@@ -6,10 +6,12 @@ public class Main {
 
         Restaurant restaurant = new Restaurant();
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 1; i <= 3; i++) {
             Thread waiter = new Thread(new Waiter(restaurant));
+            waiter.setName("Официант " + i);
             waiter.start();
             Thread visitor = new Thread(new Visitor(restaurant, VALUE));
+            visitor.setName("Посетитель " + i);
             visitor.start();
         }
     }

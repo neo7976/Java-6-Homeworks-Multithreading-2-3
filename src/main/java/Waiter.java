@@ -9,6 +9,10 @@ public class Waiter implements Runnable {
 
     @Override
     public void run() {
-        restaurant.acceptOrder();
+        try {
+            restaurant.acceptOrder();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

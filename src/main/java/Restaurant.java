@@ -3,6 +3,8 @@ import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+//todo Попробовать разбить методы, чтобы была 1 блокировка, ожидание и сигнал аналогично приготовлению
+
 public class Restaurant {
     private final int TIME_COOKING = 3000;
     private final int TIME_EAT = 3000;

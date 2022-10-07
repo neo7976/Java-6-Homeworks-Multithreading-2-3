@@ -4,18 +4,21 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Restaurant {
+    private final int TIME_COOKING = 3000;
+    private final int TIME_EAT = 3000;
 
     ReentrantLock lock;
     Condition conditionWaiter;
+    Condition conditionVisitor;
     Condition conditionSheff;
     List<String> listOrder;
     List<String> listCookEat;
-    private boolean waiter = false;
+    List<String> listWaiter;
     private boolean free = true;
 
 
     public Restaurant() {
-        this.lock = new ReentrantLock(true);
+        this.lock = new ReentrantLock();
         this.conditionWaiter = lock.newCondition();
         this.conditionSheff = lock.newCondition();
         this.listOrder = new LinkedList<>();
@@ -26,11 +29,15 @@ public class Restaurant {
         lock.lock();
         try {
             //сделать ожидание свободного официанта в цикле
-            while (waiter) {
+            while (listWaiter.isEmpty()) {
                 conditionWaiter.wait();
             }
             //сигнал, что сделан заказ
             listOrder.add("Блюдо");
+            String waiter = listWaiter.remove(0);
+            //todo проверка
+            System.out.println("Проверка на удаление и запись в переменную" + waiter);
+
             conditionWaiter.signal();
             //ждем блюдо
             while (listCookEat.isEmpty())
@@ -38,7 +45,7 @@ public class Restaurant {
 
             System.out.printf("%s приступил к еде", Thread.currentThread().getName());
             listCookEat.remove(0);
-            Thread.sleep(3000);
+            Thread.sleep(TIME_EAT);
             System.out.printf("%s вышел из ресторана", Thread.currentThread().getName());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -50,10 +57,8 @@ public class Restaurant {
     public void acceptOrder() throws InterruptedException {
         lock.lock();
         try {
-            Thread.sleep(2000);
-            System.out.println("Даем сигнал об выходе на работу");
             //вышел на работу и сообщает об этом
-            waiter = true;
+            listWaiter.add(Thread.currentThread().getName());
             conditionWaiter.signal();
             //должен уснуть, пока не поступит заказ
             while (listOrder.isEmpty())
@@ -83,7 +88,7 @@ public class Restaurant {
                 conditionSheff.wait();
 
             System.out.println("Повар начинает готовить заказ");
-            Thread.sleep(3000);
+            Thread.sleep(TIME_COOKING);
             System.out.println("Повар сделал заказ");
             listOrder.remove(0);
             free = true;

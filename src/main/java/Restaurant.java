@@ -18,12 +18,13 @@ public class Restaurant {
 
 
     public Restaurant() {
-        this.lock = new ReentrantLock();
+        this.lock = new ReentrantLock(false);
         this.conditionWaiter = lock.newCondition();
         this.conditionSheff = lock.newCondition();
         this.conditionVisitor = lock.newCondition();
         this.listOrder = new LinkedList<>();
         this.listCookEat = new LinkedList<>();
+        this.listWaiter = new LinkedList<>();
     }
 
     public void order() {
@@ -31,24 +32,23 @@ public class Restaurant {
         try {
             //сделать ожидание свободного официанта в цикле
             while (listWaiter.isEmpty()) {
-//                conditionWaiter.wait();
                 conditionVisitor.wait();
             }
             //сигнал, что сделан заказ
             listOrder.add("Блюдо");
             String waiter = listWaiter.remove(0);
             //todo проверка
-            System.out.println("Проверка на удаление и запись в переменную" + waiter);
+            System.out.println("Проверка на удаление и запись в переменную:" + waiter);
 
             conditionWaiter.signal();
             //ждем блюдо
             while (listCookEat.isEmpty())
                 conditionVisitor.wait();
 
-            System.out.printf("%s приступил к еде", Thread.currentThread().getName());
+            System.out.printf("%s приступил к еде\n", Thread.currentThread().getName());
             Thread.sleep(TIME_EAT);
             listCookEat.remove(0);
-            System.out.printf("%s вышел из ресторана", Thread.currentThread().getName());
+            System.out.printf("%s вышел из ресторана\n", Thread.currentThread().getName());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -65,8 +65,11 @@ public class Restaurant {
             //должен уснуть, пока не поступит заказ
             while (listOrder.isEmpty())
                 conditionWaiter.wait();
-            System.out.printf("%s принял заказ", Thread.currentThread().getName());
-            //говорим повару приготовить еду
+            //todo нужно подумать о возможности использования Map
+            System.out.printf("%s принял заказ\n", Thread.currentThread().getName());
+            //говорим повару приготовить еду и проверяем свободен ли он
+            while (!free)
+                conditionWaiter.wait();
             free = false;
             conditionSheff.signal();
             //ждём ответа от повара
@@ -91,10 +94,10 @@ public class Restaurant {
 
             System.out.println("Повар начинает готовить заказ");
             Thread.sleep(TIME_COOKING);
-            System.out.println("Повар сделал заказ");
             listCookEat.add(listOrder.remove(0));
+            System.out.println("Повар сделал заказ");
             free = true;
-            conditionWaiter.signal();
+            conditionWaiter.signalAll();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {

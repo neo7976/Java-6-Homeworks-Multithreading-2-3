@@ -9,6 +9,7 @@ public class Waiter implements Runnable {
 
     @Override
     public void run() {
+        System.out.printf("%s вышел на работу\n", Thread.currentThread().getName());
         try {
             restaurant.acceptOrder();
         } catch (InterruptedException e) {
